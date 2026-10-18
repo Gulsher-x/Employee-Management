@@ -1,30 +1,39 @@
 package synapse.employee.management.services;
 
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import synapse.employee.management.entites.journalEnteries;
+import synapse.employee.management.entites.journalEntries;
+import synapse.employee.management.entites.users;
 import synapse.employee.management.repo.journalRepo;
 
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class journalServices {
     @Autowired
     private journalRepo journalRepo;
-
-    public String saveAll(journalEnteries journalEnteries){
-        journalRepo.save(journalEnteries);
-        return "saved...";
+    @Autowired
+    private  userService userService;
+    public void saveAll(journalEntries journalEnteries, String username){
+        users user= userService.findbyuser(username);
+        journalEntries save = journalRepo.save(journalEnteries);
+        user.getJournalEnteries().add(save);
+        userService.saveUser(user);
     }
-
-    public List<journalEnteries> getAll(){
+    public void saveall(journalEntries journalEntries){
+        journalRepo.save(journalEntries);
+    }
+    public List<journalEntries> getUserjounralentry(){
         return journalRepo.findAll();
     }
-    public journalEnteries findid(Long id){
+    public journalEntries findid(ObjectId id){
         return journalRepo.findById(id).orElse(null);
     }
-    public void delete(Long id){
-         journalRepo.deleteById(id);
+    public void delete(ObjectId id, String username){
+        users user = userService.findbyuser(username);
+        user.getJournalEnteries().removeIf(x-> x.getId().equals(id));
+        userService.saveUser(user);
+        journalRepo.deleteById(id);
     }
 }

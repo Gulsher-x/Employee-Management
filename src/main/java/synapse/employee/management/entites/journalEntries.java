@@ -1,17 +1,18 @@
 package synapse.employee.management.entites;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document
-@Getter
-@Setter
-public class journalEnteries {
+@Data
+@NoArgsConstructor
+public class journalEntries {
     @Id
-    private Long id;
-    private String name;
+    private ObjectId id;
+    private String phone;
     private String email;
 
 }
