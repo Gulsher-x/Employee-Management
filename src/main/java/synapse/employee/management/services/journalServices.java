@@ -3,6 +3,7 @@ package synapse.employee.management.services;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import synapse.employee.management.entites.journalEntries;
 import synapse.employee.management.entites.users;
 import synapse.employee.management.repo.journalRepo;
@@ -15,6 +16,7 @@ public class journalServices {
     private journalRepo journalRepo;
     @Autowired
     private  userService userService;
+    @Transactional
     public void saveAll(journalEntries journalEnteries, String username){
         users user= userService.findbyuser(username);
         journalEntries save = journalRepo.save(journalEnteries);
