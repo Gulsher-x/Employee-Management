@@ -2,6 +2,7 @@ package synapse.employee.management.entites;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor; // Isko bhi add kar diya safe side rehne ke liye
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -11,14 +12,17 @@ import java.time.LocalDateTime;
 @Document(collection = "journalEntries")
 @Data
 @NoArgsConstructor
-public class journalEntry {
+@AllArgsConstructor // Parameterized constructor ke liye
+public class JournalEntry { // Class name Capitalized kiya
+
     @Id
     private ObjectId id;
-    private String employeeName ;
+
+    // Sabhi fields ke aage explicitly private lagaya
+    private String employeeName;
     private String phone;
     private String email;
     private String department;
     private String role;
     private LocalDateTime dateTime;
-
 }
