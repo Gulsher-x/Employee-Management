@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 @Document(collection = "journalEntries")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor // Parameterized constructor ke liye
-public class JournalEntry { // Class name Capitalized kiya
+@AllArgsConstructor
+public class JournalEntry {
 
     @Id
     private ObjectId id;
 
-    // Sabhi fields ke aage explicitly private lagaya
+
     private String employeeName;
     private String phone;
     private String email;

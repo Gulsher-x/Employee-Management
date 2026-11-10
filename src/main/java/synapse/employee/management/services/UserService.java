@@ -33,6 +33,9 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
+        // Default role for every registered user
+        user.setRole(List.of("USER"));
+
         return UserRepository.save(user);
     }
 

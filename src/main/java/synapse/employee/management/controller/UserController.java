@@ -12,14 +12,14 @@ import synapse.employee.management.services.UserService; // Capital U
 import java.util.Map;
 
 @RestController
-@RequestMapping("/u")
-public class UserController { // Capital U
+@RequestMapping("/user")
+public class UserController {
 
     @Autowired
-    private UserService userService; // Capital U
+    private UserService userService;
 
     // Get logged-in user's profile
-    @GetMapping("/me")
+    @GetMapping
     public ResponseEntity<?> getUser(Authentication authentication) {
         User currentUser = userService.findbyuser(authentication.getName());
 

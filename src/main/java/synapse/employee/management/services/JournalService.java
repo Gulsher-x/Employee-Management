@@ -89,4 +89,7 @@ public class JournalService {
 
         return true;
     }
+    public void deleteByAdmin(ObjectId id) {
+        JournalRepository.deleteById(id);
+    }
 }

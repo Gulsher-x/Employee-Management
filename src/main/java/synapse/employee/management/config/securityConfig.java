@@ -12,17 +12,26 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true) // Isse controller level roles active ho jayenge
+@EnableMethodSecurity
 public class securityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**").permitAll() // Sabke liye open hai
-                        .anyRequest().authenticated() // Baaki sab authenticated chahiye
+
+                        .requestMatchers("/public/**").permitAll()
+
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        .requestMatchers("/user/**").hasRole("USER")
+
+                        .anyRequest().authenticated()
                 )
+
                 .httpBasic(Customizer.withDefaults());
 
         return http.build();
