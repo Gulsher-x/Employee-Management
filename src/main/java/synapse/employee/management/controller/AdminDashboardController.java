@@ -1,5 +1,5 @@
 package synapse.employee.management.controller;
-
+import java.time.LocalDateTime;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +30,20 @@ public class AdminDashboardController {
 
     @Autowired
     private JournalRepository journalRepository;
+
+    @PostMapping("/employees")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> addEmployee(
+            @RequestBody JournalEntry entry) {
+
+        entry.setId(null);
+        entry.setDateTime(LocalDateTime.now());
+
+        journalService.saveAll(entry);
+
+        return ResponseEntity.status(201)
+                .body(entry);
+    }
 
     @GetMapping("/employees")
     @PreAuthorize("hasRole('ADMIN')")
