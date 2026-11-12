@@ -1,74 +1,135 @@
+
 package synapse.employee.management.controller;
-import java.time.LocalDateTime;
+
+import java.util.List;
+import java.util.Map;
+
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
-import synapse.employee.management.entites.User;
+import synapse.employee.management.entites.Employee;
+import synapse.employee.management.repo.EmployeeRepository;
 import synapse.employee.management.repo.UserRepository;
-import synapse.employee.management.repo.JournalRepository;
-import synapse.employee.management.entites.JournalEntry;
-import synapse.employee.management.services.JournalService;
-import synapse.employee.management.services.UserService;
+import synapse.employee.management.services.EmployeeService;
 
-import java.util.Map;
-import java.util.List;
+import java.util.HashMap;
+import org.springframework.security.core.Authentication;
+import synapse.employee.management.entites.User;
+import synapse.employee.management.services.UserService;
 
 @RestController
 @RequestMapping("/admin")
 public class AdminDashboardController {
-    @Autowired
-    private JournalService journalService;
 
-    @Autowired
-    private UserService userService;
+    private final EmployeeService employeeService;
+    private final EmployeeRepository employeeRepository;
+    private final UserRepository userRepository;
+    private final UserService userService;
 
-    @Autowired
-    private UserRepository userRepository;
+    public AdminDashboardController(
+            EmployeeService employeeService,
+            EmployeeRepository employeeRepository,
+            UserService userService,
+            UserRepository userRepository) {
 
-    @Autowired
-    private JournalRepository journalRepository;
+        this.employeeService = employeeService;
+        this.employeeRepository = employeeRepository;
+        this.userRepository = userRepository;
+        this.userService = userService;
+    }
+    // Admin Change Password
+    @PostMapping("/change-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> changePassword(
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
 
+        String currentPassword = request.get("currentPassword");
+        String newPassword = request.get("newPassword");
+
+        if (currentPassword == null || newPassword == null ||
+                currentPassword.isBlank() || newPassword.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body("Password fields cannot be empty");
+        }
+
+        if (newPassword.length() < 8) {
+            return ResponseEntity.badRequest()
+                    .body("New password must be at least 8 characters");
+        }
+
+        boolean updated = userService.changePassword(
+                authentication.getName(),
+                currentPassword,
+                newPassword
+        );
+
+        if (!updated) {
+            return ResponseEntity.badRequest()
+                    .body("Current password is incorrect");
+        }
+
+        return ResponseEntity.ok("Password changed successfully");
+    }
+
+    // Add Employee
     @PostMapping("/employees")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> addEmployee(
-            @RequestBody JournalEntry entry) {
+    public ResponseEntity<Employee> addEmployee(
+            @RequestBody Employee employee) {
 
-        entry.setId(null);
-        entry.setDateTime(LocalDateTime.now());
+        employee.setId(null);
 
-        journalService.saveAll(entry);
+        Employee savedEmployee =
+                employeeService.saveEmployee(employee);
 
-        return ResponseEntity.status(201)
-                .body(entry);
+        return ResponseEntity.status(201).body(savedEmployee);
     }
 
+    // Get All Employees
     @GetMapping("/employees")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<JournalEntry> getAllEmployees() {
+    public List<Employee> getAllEmployees() {
 
-        return journalRepository.findAll();
+        return employeeService.getAllEmployees();
     }
 
+    // Get Employee By ID
+    @GetMapping("/employees/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getEmployeeById(
+            @PathVariable String id) {
+
+        if (!ObjectId.isValid(id)) {
+            return ResponseEntity.badRequest()
+                    .body("Invalid Employee ID");
+        }
+
+        return employeeService
+                .getEmployeeById(new ObjectId(id))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Admin Dashboard Statistics
     @GetMapping("/dashboard")
     @PreAuthorize("hasRole('ADMIN')")
     public Map<String, Object> getDashboard() {
 
-        // Total registered users
         long totalUsers = userRepository.count();
 
-        // Total employees
-        long totalEmployees = journalRepository.count();
+        long totalEmployees = employeeRepository.count();
 
-        // Get all employees
-        List<JournalEntry> employees = journalRepository.findAll();
+        List<Employee> employees =
+                employeeRepository.findAll();
 
-        // Count unique departments
         long totalDepartments = employees.stream()
-                .map(JournalEntry::getDepartment)
-                .filter(department -> department != null && !department.isBlank())
+                .map(Employee::getDepartment)
+                .filter(department ->
+                        department != null && !department.isBlank())
                 .distinct()
                 .count();
 
@@ -78,76 +139,71 @@ public class AdminDashboardController {
                 "totalDepartments", totalDepartments
         );
     }
+
+    // Update Employee
     @PutMapping("/employees/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateEmployee(
             @PathVariable String id,
-            @RequestBody JournalEntry newEntry) {
+            @RequestBody Employee employee) {
 
         if (!ObjectId.isValid(id)) {
-            return ResponseEntity.badRequest().body("Invalid Employee ID");
+            return ResponseEntity.badRequest()
+                    .body("Invalid Employee ID");
         }
 
-        ObjectId objectId = new ObjectId(id);
+        Employee updated = employeeService.updateEmployee(
+                new ObjectId(id), employee);
 
-        JournalEntry old = journalService.findId(objectId);
-
-        if (old == null) {
+        if (updated == null) {
             return ResponseEntity.notFound().build();
         }
 
-        if (newEntry.getEmployeeName() != null)
-            old.setEmployeeName(newEntry.getEmployeeName());
-
-        if (newEntry.getPhone() != null)
-            old.setPhone(newEntry.getPhone());
-
-        if (newEntry.getEmail() != null)
-            old.setEmail(newEntry.getEmail());
-
-        if (newEntry.getDepartment() != null)
-            old.setDepartment(newEntry.getDepartment());
-
-        if (newEntry.getRole() != null)
-            old.setRole(newEntry.getRole());
-
-        journalService.saveAll(old);
-
-        return ResponseEntity.ok("Employee updated successfully by Admin");
+        return ResponseEntity.ok(updated);
     }
+    // Admin Profile
+    @GetMapping("/profile")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getAdminProfile(Authentication authentication) {
+
+        User user = userRepository.findByUserName(authentication.getName());
+
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Map<String, Object> profile = new HashMap<>();
+
+        profile.put("userName", user.getUserName());
+        profile.put("role", user.getRole());
+
+        if (user.getEmployeeId() != null) {
+            employeeRepository.findById(user.getEmployeeId())
+                    .ifPresent(employee -> profile.put("employee", employee));
+        }
+
+        return ResponseEntity.ok(profile);
+    }
+
+    // Delete Employee
     @DeleteMapping("/employees/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteEmployee(@PathVariable String id) {
+    public ResponseEntity<?> deleteEmployee(
+            @PathVariable String id) {
 
         if (!ObjectId.isValid(id)) {
-            return ResponseEntity.badRequest().body("Invalid Employee ID");
+            return ResponseEntity.badRequest()
+                    .body("Invalid Employee ID");
         }
 
-        ObjectId objectId = new ObjectId(id);
+        boolean deleted = employeeService.deleteEmployee(
+                new ObjectId(id));
 
-        JournalEntry employee = journalService.findId(objectId);
-
-        if (employee == null) {
+        if (!deleted) {
             return ResponseEntity.notFound().build();
         }
 
-        // Remove employee reference from its owner
-        for (User user : userService.getUser()) {
-
-            if (user.getJournalEntries() != null) {
-
-                boolean removed = user.getJournalEntries()
-                        .removeIf(entry -> objectId.equals(entry.getId()));
-
-                if (removed) {
-                    userService.saveUser(user);
-                    break;
-                }
-            }
-        }
-
-        journalService.deleteByAdmin(objectId);
-
-        return ResponseEntity.ok("Employee deleted successfully by Admin");
+        return ResponseEntity.ok(
+                "Employee deleted successfully by Admin");
     }
 }

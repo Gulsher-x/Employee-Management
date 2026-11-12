@@ -1,9 +1,11 @@
+
 package synapse.employee.management.entites;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -15,9 +17,9 @@ import java.util.List;
 
 @Document(collection = "users")
 @Data
-@NoArgsConstructor  // MongoDB ke internal instantiation ke liye zaroori hai
-@AllArgsConstructor // Saari fields ke saath constructor banane ke liye
-public class User { // Class name Capitalized kiya (User)
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
 
     @Id
     private ObjectId id;
@@ -29,8 +31,12 @@ public class User { // Class name Capitalized kiya (User)
     @NonNull
     private String password;
 
-    @DBRef
-    private List<JournalEntry> journalEntries = new ArrayList<>(); // Capital J kiya aur private lagaya
+    private List<String> role;
 
-    private List<String> role; // Private keyword add kiya standard encapsulation ke liye
+
+    private ObjectId employeeId;
+
+
+    @DBRef
+    private List<JournalEntry> journalEntries = new ArrayList<>();
 }

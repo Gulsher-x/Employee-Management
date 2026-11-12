@@ -4,10 +4,12 @@ package synapse.employee.management.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import synapse.employee.management.entites.User;
-
+import synapse.employee.management.entites.Employee;
 import synapse.employee.management.repo.UserRepository;
-
+import synapse.employee.management.repo.EmployeeRepository;
+import synapse.employee.management.dto.RegistrationRequest;
 
 import java.util.List;
 
@@ -15,46 +17,83 @@ import java.util.List;
 public class UserService {
 
     @Autowired
-    private UserRepository UserRepository;
+    private UserRepository userRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     public List<User> getUser() {
-        return UserRepository.findAll();
+        return userRepository.findAll();
     }
 
-    // New user registration
-    public User saveNewUser(User user) {
+    // Register User and Employee together
+    public User registerUser(RegistrationRequest request) {
 
-        if (UserRepository.findByUserName(user.getUserName()) != null) {
+        if (userRepository.findByUserName(request.getUserName()) != null) {
             throw new RuntimeException("Username already exists");
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // Create Employee
+        Employee employee = new Employee();
 
-        // Default role for every registered user
+        employee.setName(request.getName());
+        employee.setEmail(request.getEmail());
+        employee.setPhone(request.getPhone());
+        employee.setDepartment(request.getDepartment());
+        employee.setRole(request.getDesignation());
+
+        // Save Employee first
+        Employee savedEmployee = employeeRepository.save(employee);
+
+        // Create User
+        User user = new User();
+
+        user.setUserName(request.getUserName());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(List.of("USER"));
 
-        return UserRepository.save(user);
+        // Link Employee with User
+        user.setEmployeeId(savedEmployee.getId());
+
+        return userRepository.save(user);
     }
 
     // Existing user update
     public User saveUser(User user) {
-        return UserRepository.save(user);
+        return userRepository.save(user);
     }
 
     public User findbyuser(String userName) {
-        return UserRepository.findByUserName(userName);
+        return userRepository.findByUserName(userName);
     }
 
     public void deleteUser(String username) {
-        UserRepository.deleteByUserName(username);
+        userRepository.deleteByUserName(username);
     }
 
-    // Password update with encoding
-    public void updatePassword(User user, String newPassword) {
+    // Password update
+    // Change Password
+    public boolean changePassword(
+            String username,
+            String currentPassword,
+            String newPassword) {
+
+        User user = userRepository.findByUserName(username);
+
+        if (user == null) {
+            return false;
+        }
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false;
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
-        UserRepository.save(user);
+        userRepository.save(user);
+
+        return true;
     }
 }

@@ -4,33 +4,36 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import synapse.employee.management.entites.User; // Capital U
-import synapse.employee.management.services.UserService; // Capital U
+import synapse.employee.management.dto.RegistrationRequest;
+import synapse.employee.management.entites.User;
+import synapse.employee.management.services.UserService;
 
 import java.util.Map;
 
 @RestController
-@RequestMapping("/public") // Added leading slash
-public class PublicController { // Capital P
+@RequestMapping("/public")
+public class PublicController {
 
     @Autowired
-    private UserService userService; // Capital U
+    private UserService userService;
 
-    @GetMapping("/health") // Added leading slash
+    @GetMapping("/health")
     public String health() {
         return "working...";
     }
 
-    @PostMapping("/create-user") // Added leading slash
-    public ResponseEntity<?> saveUser(@RequestBody User user) {
+    @PostMapping("/create-user")
+    public ResponseEntity<?> saveUser(
+            @RequestBody RegistrationRequest request) {
+
         try {
-            // Unnecessary full package path hata kar clean code kiya
-            User savedUser = userService.saveNewUser(user);
+            User savedUser = userService.registerUser(request);
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of(
-                            "message", "User created successfully",
-                            "userName", savedUser.getUserName()
+                            "message", "User and Employee created successfully",
+                            "userName", savedUser.getUserName(),
+                            "employeeId", savedUser.getEmployeeId()
                     ));
 
         } catch (RuntimeException e) {

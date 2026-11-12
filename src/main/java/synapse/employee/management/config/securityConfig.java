@@ -31,9 +31,14 @@ public class securityConfig {
 
                         .requestMatchers("/public/**").permitAll()
 
+                        .requestMatchers("/user/change-password")
+                        .hasAnyRole("USER", "ADMIN")
+
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         .requestMatchers("/user/**").hasRole("USER")
+
+
 
                         .anyRequest().authenticated()
                 )
