@@ -96,4 +96,31 @@ public class UserService {
 
         return true;
     }
+    //profile update
+    public Employee updateEmployeeProfile(
+            String username,
+            String name,
+            String email,
+            String phone) {
+
+        User user = userRepository.findByUserName(username);
+
+        if (user == null || user.getEmployeeId() == null) {
+            return null;
+        }
+
+        Employee employee = employeeRepository
+                .findById(user.getEmployeeId())
+                .orElse(null);
+
+        if (employee == null) {
+            return null;
+        }
+
+        employee.setName(name);
+        employee.setEmail(email);
+        employee.setPhone(phone);
+
+        return employeeRepository.save(employee);
+    }
 }

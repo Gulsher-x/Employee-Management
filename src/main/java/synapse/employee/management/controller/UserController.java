@@ -6,9 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import synapse.employee.management.entites.User; // Capital U
+import synapse.employee.management.entites.Employee;
+import synapse.employee.management.entites.User;
 import synapse.employee.management.repo.EmployeeRepository;
-import synapse.employee.management.services.UserService; // Capital U
+import synapse.employee.management.services.UserService;
 
 import java.util.Map;
 
@@ -89,5 +90,37 @@ public class UserController {
 
         userService.deleteUser(authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+    // Update logged-in user's profile
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+
+        String name = request.get("name");
+        String email = request.get("email");
+        String phone = request.get("phone");
+
+        if (name == null || name.isBlank() ||
+                email == null || email.isBlank() ||
+                phone == null || phone.isBlank()) {
+
+            return ResponseEntity.badRequest()
+                    .body("Name, email and phone are required");
+        }
+
+        Employee updatedEmployee = userService.updateEmployeeProfile(
+                authentication.getName(),
+                name,
+                email,
+                phone
+        );
+
+        if (updatedEmployee == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Employee profile not found");
+        }
+
+        return ResponseEntity.ok(updatedEmployee);
     }
 }
