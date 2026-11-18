@@ -542,21 +542,21 @@ function App() {
                     <p>Total Employees: {stats.totalEmployees}</p>
                   </div>
 
-                  <button
-                      className="add-btn"
-                      onClick={() => {
-                        setEditId(null);
-                        setFormData({
-                          name: "",
-                          email: "",
-                          phone: "",
-                          department: "IT",
-                        });
-                        setShowForm(true);
-                      }}
-                  >
-                    + Add Employee
-                  </button>
+                  {/*<button*/}
+                  {/*    className="add-btn"*/}
+                  {/*    onClick={() => {*/}
+                  {/*      setEditId(null);*/}
+                  {/*      setFormData({*/}
+                  {/*        name: "",*/}
+                  {/*        email: "",*/}
+                  {/*        phone: "",*/}
+                  {/*        department: "IT",*/}
+                  {/*      });*/}
+                  {/*      setShowForm(true);*/}
+                  {/*    }}*/}
+                  {/*>*/}
+                  {/*  + Add Employee*/}
+                  {/*</button>*/}
 
                 </div>
 
